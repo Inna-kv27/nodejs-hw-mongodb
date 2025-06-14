@@ -1,4 +1,4 @@
-import Contact from '../db/models/contact.js'; // Переконайтесь, що шлях до моделі правильний ('contact.js' з малої літери 'c')
+import Contact from '../models/contact.js'; // Переконайтесь, що шлях до моделі правильний ('contact.js' з малої літери 'c')
 
 /**
  * Функція для отримання всіх контактів з бази даних.
