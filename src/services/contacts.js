@@ -1,4 +1,4 @@
-import Contact from '../db/models/Contact.js'; // Тепер це імпорт за замовчуванням
+import Contact from '../db/models/contact.js'; // Переконайтесь, що шлях до моделі правильний ('contact.js' з малої літери 'c')
 
 /**
  * Функція для отримання всіх контактів з бази даних.
@@ -21,8 +21,7 @@ export const getContactById = async (contactId) => {
 
 /**
  * Функція для створення нового контакту в базі даних.
- * Ця функція використовується контролером createContactController.
- * @param {Object} payload - Об'єкт, що містить дані для створення контакту (name, phoneNumber, email, isFavourite, contactType).
+ * @param {Object} payload - Об'єкт, що містить дані для створення контакту.
  * @returns {Promise<Object>} Створений об'єкт контакту.
  */
 export const createContact = async (payload) => {
@@ -32,28 +31,25 @@ export const createContact = async (payload) => {
 
 /**
  * Функція для оновлення існуючого контакту в базі даних.
- * Ця функція є заглушкою для Кроку 4.
  * @param {string} contactId - ID контакту, який потрібно оновити.
- * @param {Object} payload - Об'єкт, що містить дані для оновлення.
+ * @param {Object} payload - Об'єкт, що містить часткові дані для оновлення контакту.
  * @returns {Promise<Object|null>} Оновлений об'єкт контакту або null, якщо не знайдено.
  */
 export const updateContact = async (contactId, payload) => {
-  // Використовуємо findByIdAndUpdate, щоб знайти контакт за ID та оновити його.
-  // Опція { new: true } гарантує, що метод поверне оновлений документ.
-  const updatedContact = await Contact.findByIdAndUpdate(contactId, payload, {
+  const contact = await Contact.findByIdAndUpdate(contactId, payload, {
     new: true,
   });
-  return updatedContact;
+  return contact;
 };
 
 /**
  * Функція для видалення контакту з бази даних.
- * Ця функція є заглушкою для Кроку 5.
  * @param {string} contactId - ID контакту, який потрібно видалити.
  * @returns {Promise<Object|null>} Видалений об'єкт контакту або null, якщо не знайдено.
  */
 export const deleteContact = async (contactId) => {
-  // Використовуємо findByIdAndDelete, щоб знайти контакт за ID та видалити його.
-  const deletedContact = await Contact.findByIdAndDelete(contactId);
-  return deletedContact;
+  // Використовуємо findByIdAndDelete для пошуку за ID та видалення.
+  // Цей метод повертає видалений документ або null, якщо документ не знайдено.
+  const contact = await Contact.findByIdAndDelete(contactId);
+  return contact;
 };

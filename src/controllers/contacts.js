@@ -1,10 +1,11 @@
 import createHttpError from 'http-errors';
+import mongoose from 'mongoose'; // <-- Додаємо імпорт mongoose для isValidObjectId
 
 // Імпортуємо всі необхідні функції сервісів.
 import {
   listContacts,
   getContactById,
-  createContact, // Імпортуємо нову функцію createContact
+  createContact,
   updateContact,
   deleteContact,
 } from '../services/contacts.js';
@@ -25,11 +26,22 @@ export const getAllContactsController = async (req, res) => {
 
 /**
  * Контролер для отримання контакту за його ID.
+ * Додано валідацію формату ObjectId.
  * @param {import('express').Request} req - Об'єкт запиту Express.
  * @param {import('express').Response} res - Об'єкт відповіді Express.
  */
 export const getContactByIdController = async (req, res) => {
   const { contactId } = req.params;
+
+  // --- НОВА ВАЛІДАЦІЯ ---
+  // Перевіряємо, чи є отриманий contactId валідним форматом ObjectId MongoDB.
+  if (!mongoose.isValidObjectId(contactId)) {
+    // Якщо ID невалідний, викидаємо помилку 400 Bad Request.
+    // Цю помилку перехопить ctrlWrapper, а потім errorHandler.
+    throw createHttpError(400, 'Invalid contact ID format');
+  }
+  // --- КІНЕЦЬ НОВОЇ ВАЛІДАЦІЇ ---
+
   const contact = await getContactById(contactId);
 
   if (!contact) {
@@ -50,12 +62,7 @@ export const getContactByIdController = async (req, res) => {
  * @param {import('express').Response} res - Об'єкт відповіді Express.
  */
 export const createContactController = async (req, res) => {
-  // Дані для створення контакту знаходяться в req.body.
-  // Передаємо їх сервісу createContact.
   const newContact = await createContact(req.body);
-
-  // Відправляємо успішну відповідь зі статусом 201 (Created)
-  // та даними створеного контакту.
   res.status(201).json({
     status: 201,
     message: 'Successfully created a contact!',
@@ -64,13 +71,24 @@ export const createContactController = async (req, res) => {
 };
 
 /**
- * Контролер для оновлення існуючого контакту (заглушка для Кроку 4).
- * @param {import('express').Request} req - Об'єкт запиту Express.
+ * Контролер для оновлення існуючого контакту.
+ * Додано валідацію формату ObjectId.
+ * @param {import('express').Request} req - Об'єкт запиту Express, що містить ID контакту в req.params
+ * та часткові дані для оновлення в req.body.
  * @param {import('express').Response} res - Об'єкт відповіді Express.
  */
 export const updateContactController = async (req, res) => {
   const { contactId } = req.params;
-  const updatedContact = await updateContact(contactId, req.body);
+  const payload = req.body;
+
+  // --- НОВА ВАЛІДАЦІЯ ---
+  // Перевіряємо, чи є отриманий contactId валідним форматом ObjectId MongoDB.
+  if (!mongoose.isValidObjectId(contactId)) {
+    throw createHttpError(400, 'Invalid contact ID format');
+  }
+  // --- КІНЕЦЬ НОВОЇ ВАЛІДАЦІЇ ---
+
+  const updatedContact = await updateContact(contactId, payload);
 
   if (!updatedContact) {
     throw createHttpError(404, 'Contact not found');
@@ -84,12 +102,21 @@ export const updateContactController = async (req, res) => {
 };
 
 /**
- * Контролер для видалення існуючого контакту (заглушка для Кроку 5).
- * @param {import('express').Request} req - Об'єкт запиту Express.
+ * Контролер для видалення існуючого контакту.
+ * Додано валідацію формату ObjectId.
+ * @param {import('express').Request} req - Об'єкт запиту Express, що містить ID контакту в req.params.
  * @param {import('express').Response} res - Об'єкт відповіді Express.
  */
 export const deleteContactController = async (req, res) => {
   const { contactId } = req.params;
+
+  // --- НОВА ВАЛІДАЦІЯ ---
+  // Перевіряємо, чи є отриманий contactId валідним форматом ObjectId MongoDB.
+  if (!mongoose.isValidObjectId(contactId)) {
+    throw createHttpError(400, 'Invalid contact ID format');
+  }
+  // --- КІНЕЦЬ НОВОЇ ВАЛІДАЦІЇ ---
+
   const deletedContact = await deleteContact(contactId);
 
   if (!deletedContact) {
