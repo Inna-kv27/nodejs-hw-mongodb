@@ -4,19 +4,42 @@ import {
   getContactByIdController,
   createContactController,
   updateContactController,
-  deleteContactController, // Переконайтесь, що цей імпорт присутній
+  deleteContactController,
 } from '../controllers/contacts.js';
 import ctrlWrapper from '../utils/ctrlWrapper.js';
+
+// Імпортуємо middleware для валідації тіла запиту
+import validateBody from '../middlewares/validateBody.js';
+
+// Імпортуємо схеми валідації Joi для контактів
+import {
+  createContactSchema,
+  updateContactSchema,
+} from '../validation/contacts.js';
+
+// Імпортуємо middleware для перевірки валідності ID (буде створений на наступному кроці)
+import isValidId from '../middlewares/isValidId.js'; // Буде створено далі
 
 const router = express.Router();
 
 router.get('/', ctrlWrapper(getAllContactsController));
-router.get('/:contactId', ctrlWrapper(getContactByIdController));
-router.post('/', ctrlWrapper(createContactController));
-router.patch('/:contactId', ctrlWrapper(updateContactController));
+router.get('/:contactId', isValidId, ctrlWrapper(getContactByIdController)); // Застосовуємо isValidId
 
-// Маршрут для видалення існуючого контакту: DELETE /contacts/:contactId
-// Він вже був доданий як заглушка на Кроці 1, тепер контролер реалізований.
-router.delete('/:contactId', ctrlWrapper(deleteContactController));
+// Застосовуємо validateBody з createContactSchema перед контролером створення контакту
+router.post(
+  '/',
+  validateBody(createContactSchema),
+  ctrlWrapper(createContactController),
+);
+
+// Застосовуємо isValidId та validateBody з updateContactSchema перед контролером оновлення контакту
+router.patch(
+  '/:contactId',
+  isValidId,
+  validateBody(updateContactSchema),
+  ctrlWrapper(updateContactController),
+);
+
+router.delete('/:contactId', isValidId, ctrlWrapper(deleteContactController)); // Застосовуємо isValidId
 
 export default router;

@@ -1,40 +1,56 @@
-import Contact from '../models/contact.js'; // Переконайтесь, що шлях до моделі правильний ('contact.js' з малої літери 'c')
+import Contact from '../models/contact.js'; // Переконайтесь, що шлях до моделі правильний
 
 /**
- * Функція для отримання всіх контактів з бази даних.
- * @returns {Promise<Array>} Масив об'єктів контактів.
+ * Функція для отримання всіх контактів з бази даних з пагінацією.
+ * @param {Object} options - Об'єкт з параметрами пагінації.
+ * @param {number} options.page - Номер поточної сторінки (за замовчуванням 1).
+ * @param {number} options.perPage - Кількість елементів на сторінці (за замовчуванням 10).
+ * @returns {Promise<Object>} Об'єкт з даними контактів, пагінацією та метаданими.
  */
-export const listContacts = async () => {
-  const contacts = await Contact.find();
-  return contacts;
+export const listContacts = async ({ page = 1, perPage = 10 }) => {
+  // Обчислюємо, скільки документів потрібно пропустити (skip)
+  const skip = (page - 1) * perPage;
+
+  // Отримуємо контакти для поточної сторінки
+  const contacts = await Contact.find().skip(skip).limit(perPage);
+
+  // Отримуємо загальну кількість документів в колекції
+  const totalItems = await Contact.countDocuments();
+
+  // Обчислюємо загальну кількість сторінок
+  const totalPages = Math.ceil(totalItems / perPage);
+
+  // Визначаємо, чи є попередні/наступні сторінки
+  const hasPreviousPage = page > 1;
+  const hasNextPage = page < totalPages;
+
+  return {
+    data: contacts, // Масив контактів для поточної сторінки
+    page, // Номер поточної сторінки
+    perPage, // Кількість елементів на сторінці
+    totalItems, // Загальна кількість елементів
+    totalPages, // Загальна кількість сторінок
+    hasPreviousPage, // Чи є попередня сторінка
+    hasNextPage, // Чи є наступна сторінка
+  };
 };
 
-/**
- * Функція для отримання контакту за його ID з бази даних.
- * @param {string} contactId - ID контакту, який потрібно знайти.
- * @returns {Promise<Object|null>} Об'єкт контакту або null, якщо не знайдено.
- */
+// *****************************************************************
+// Решта функцій сервісу (getContactById, createContact, updateContact, deleteContact)
+// залишаються без змін з попереднього кроку.
+// Я їх тут не повторюю, щоб не захаращувати код, але вони мають бути у вашому файлі.
+// *****************************************************************
+
 export const getContactById = async (contactId) => {
   const contact = await Contact.findById(contactId);
   return contact;
 };
 
-/**
- * Функція для створення нового контакту в базі даних.
- * @param {Object} payload - Об'єкт, що містить дані для створення контакту.
- * @returns {Promise<Object>} Створений об'єкт контакту.
- */
 export const createContact = async (payload) => {
   const contact = await Contact.create(payload);
   return contact;
 };
 
-/**
- * Функція для оновлення існуючого контакту в базі даних.
- * @param {string} contactId - ID контакту, який потрібно оновити.
- * @param {Object} payload - Об'єкт, що містить часткові дані для оновлення контакту.
- * @returns {Promise<Object|null>} Оновлений об'єкт контакту або null, якщо не знайдено.
- */
 export const updateContact = async (contactId, payload) => {
   const contact = await Contact.findByIdAndUpdate(contactId, payload, {
     new: true,
@@ -42,14 +58,7 @@ export const updateContact = async (contactId, payload) => {
   return contact;
 };
 
-/**
- * Функція для видалення контакту з бази даних.
- * @param {string} contactId - ID контакту, який потрібно видалити.
- * @returns {Promise<Object|null>} Видалений об'єкт контакту або null, якщо не знайдено.
- */
 export const deleteContact = async (contactId) => {
-  // Використовуємо findByIdAndDelete для пошуку за ID та видалення.
-  // Цей метод повертає видалений документ або null, якщо документ не знайдено.
-  const contact = await Contact.findByIdAndDelete(contactId);
-  return contact;
+  const deletedContact = await Contact.findByIdAndDelete(contactId);
+  return deletedContact;
 };
