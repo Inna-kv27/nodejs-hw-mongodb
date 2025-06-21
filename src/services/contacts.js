@@ -1,37 +1,61 @@
-import Contact from '../models/contact.js'; // Переконайтесь, що шлях до моделі правильний
+import Contact from '../models/contact.js'; // Ensure the path to the model is correct
 
 /**
- * Функція для отримання всіх контактів з бази даних з пагінацією.
- * @param {Object} options - Об'єкт з параметрами пагінації.
- * @param {number} options.page - Номер поточної сторінки (за замовчуванням 1).
- * @param {number} options.perPage - Кількість елементів на сторінці (за замовчуванням 10).
- * @returns {Promise<Object>} Об'єкт з даними контактів, пагінацією та метаданими.
+ * Function to retrieve all contacts from the database with pagination, sorting, and filtering.
+ * @param {Object} options - Object containing pagination, sorting, and filtering parameters.
+ * @param {number} [options.page=1] - The current page number (defaults to 1).
+ * @param {number} [options.perPage=10] - The number of items per page (defaults to 10).
+ * @param {string} [options.sortBy='name'] - The property to sort by (defaults to 'name').
+ * @param {('asc'|'desc')} [options.sortOrder='asc'] - The sort order ('asc' or 'desc', defaults to 'asc').
+ * @param {string} [options.type] - Filter by contactType.
+ * @param {boolean} [options.isFavourite] - Filter by isFavourite.
+ * @returns {Promise<Object>} An object containing contact data, pagination, and metadata.
  */
-export const listContacts = async ({ page = 1, perPage = 10 }) => {
-  // Обчислюємо, скільки документів потрібно пропустити (skip)
+export const listContacts = async ({
+  page = 1,
+  perPage = 10,
+  sortBy = 'name',
+  sortOrder = 'asc',
+  type, // New parameter for filtering by contactType
+  isFavourite, // New parameter for filtering by isFavourite
+}) => {
   const skip = (page - 1) * perPage;
 
-  // Отримуємо контакти для поточної сторінки
-  const contacts = await Contact.find().skip(skip).limit(perPage);
+  const sortDirection = sortOrder === 'desc' ? -1 : 1;
+  const sortCriteria = { [sortBy]: sortDirection };
 
-  // Отримуємо загальну кількість документів в колекції
-  const totalItems = await Contact.countDocuments();
+  // --- NEW: Build a filter object based on query parameters ---
+  const filter = {};
+  if (type) {
+    filter.contactType = type; // Add contactType to filter if provided
+  }
+  if (isFavourite !== undefined) {
+    // isFavourite can be true or false, so check for undefined (not null, 0, false)
+    filter.isFavourite = isFavourite; // Add isFavourite to filter if provided
+  }
+  // --- END NEW ---
 
-  // Обчислюємо загальну кількість сторінок
+  // Apply the filter to the find query
+  const contacts = await Contact.find(filter)
+    .skip(skip)
+    .limit(perPage)
+    .sort(sortCriteria);
+
+  // Count total items that match the filter (important for correct totalPages)
+  const totalItems = await Contact.countDocuments(filter);
+
   const totalPages = Math.ceil(totalItems / perPage);
-
-  // Визначаємо, чи є попередні/наступні сторінки
   const hasPreviousPage = page > 1;
   const hasNextPage = page < totalPages;
 
   return {
-    data: contacts, // Масив контактів для поточної сторінки
-    page, // Номер поточної сторінки
-    perPage, // Кількість елементів на сторінці
-    totalItems, // Загальна кількість елементів
-    totalPages, // Загальна кількість сторінок
-    hasPreviousPage, // Чи є попередня сторінка
-    hasNextPage, // Чи є наступна сторінка
+    data: contacts,
+    page,
+    perPage,
+    totalItems,
+    totalPages,
+    hasPreviousPage,
+    hasNextPage,
   };
 };
 

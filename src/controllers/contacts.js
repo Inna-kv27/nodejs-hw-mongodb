@@ -1,9 +1,10 @@
 import createHttpError from 'http-errors';
-import mongoose from 'mongoose';
+// Mongoose import is not needed here as ObjectId validation is handled by middleware
+// import mongoose from 'mongoose';
 
-// Імпортуємо всі необхідні функції сервісів.
+// Import all necessary service functions.
 import {
-  listContacts, // listContacts тепер обробляє пагінацію
+  listContacts, // listContacts now handles filtering
   getContactById,
   createContact,
   updateContact,
@@ -11,31 +12,53 @@ import {
 } from '../services/contacts.js';
 
 /**
- * Контролер для отримання всіх контактів з пагінацією.
- * @param {import('express').Request} req - Об'єкт запиту Express, що може містити query параметри page та perPage.
- * @param {import('express').Response} res - Об'єкт відповіді Express.
+ * Controller for retrieving all contacts with pagination, sorting, and filtering.
+ * @param {import('express').Request} req - Express request object, which may contain query parameters.
+ * @param {import('express').Response} res - Express response object.
  */
 export const getAllContactsController = async (req, res) => {
-  // Отримуємо query параметри page та perPage з req.query.
-  // Перетворюємо їх на числа. Якщо вони відсутні або невалідні, використовуємо значення за замовчуванням (1 та 10).
   const page = parseInt(req.query.page || '1', 10);
   const perPage = parseInt(req.query.perPage || '10', 10);
 
-  // Викликаємо сервіс listContacts, передаючи йому параметри пагінації.
-  const paginatedContacts = await listContacts({ page, perPage });
+  const sortBy = req.query.sortBy || 'name';
+  const sortOrder = req.query.sortOrder || 'asc';
 
-  // Відправляємо успішну відповідь у новому форматі.
+  // --- NEW: Retrieve filtering query parameters ---
+  const type = req.query.type; // Get contactType from query
+  // For boolean isFavourite, convert string to boolean. 'true' -> true, anything else -> false.
+  // Check specifically for 'true' or 'false' string to avoid issues.
+  let isFavourite = undefined; // Default to undefined to not apply filter if not provided
+  if (req.query.isFavourite !== undefined) {
+    // Only convert if the parameter is actually present
+    isFavourite = req.query.isFavourite === 'true';
+  }
+  // --- END NEW ---
+
+  if (!['asc', 'desc'].includes(sortOrder)) {
+    throw createHttpError(400, 'Invalid sortOrder. Must be "asc" or "desc".');
+  }
+
+  // Call the listContacts service, passing pagination, sorting, AND filtering parameters.
+  const paginatedContacts = await listContacts({
+    page,
+    perPage,
+    sortBy,
+    sortOrder,
+    type,
+    isFavourite,
+  });
+
   res.status(200).json({
     status: 200,
     message: 'Successfully found contacts!',
     data: {
-      data: paginatedContacts.data, // Масив контактів поточної сторінки
-      page: paginatedContacts.page, // Номер поточної сторінки
-      perPage: paginatedContacts.perPage, // Кількість елементів на сторінці
-      totalItems: paginatedContacts.totalItems, // Загальна кількість елементів
-      totalPages: paginatedContacts.totalPages, // Загальна кількість сторінок
-      hasPreviousPage: paginatedContacts.hasPreviousPage, // Чи є попередня сторінка
-      hasNextPage: paginatedContacts.hasNextPage, // Чи є наступна сторінка
+      data: paginatedContacts.data,
+      page: paginatedContacts.page,
+      perPage: paginatedContacts.perPage,
+      totalItems: paginatedContacts.totalItems,
+      totalPages: paginatedContacts.totalPages,
+      hasPreviousPage: paginatedContacts.hasPreviousPage,
+      hasNextPage: paginatedContacts.hasNextPage,
     },
   });
 };
@@ -48,17 +71,10 @@ export const getAllContactsController = async (req, res) => {
 
 export const getContactByIdController = async (req, res) => {
   const { contactId } = req.params;
-
-  if (!mongoose.isValidObjectId(contactId)) {
-    throw createHttpError(400, 'Invalid contact ID format');
-  }
-
   const contact = await getContactById(contactId);
-
   if (!contact) {
     throw createHttpError(404, 'Contact not found');
   }
-
   res.status(200).json({
     status: 200,
     message: `Successfully found contact with id ${contactId}!`,
@@ -78,17 +94,10 @@ export const createContactController = async (req, res) => {
 export const updateContactController = async (req, res) => {
   const { contactId } = req.params;
   const payload = req.body;
-
-  if (!mongoose.isValidObjectId(contactId)) {
-    throw createHttpError(400, 'Invalid contact ID format');
-  }
-
   const updatedContact = await updateContact(contactId, payload);
-
   if (!updatedContact) {
     throw createHttpError(404, 'Contact not found');
   }
-
   res.status(200).json({
     status: 200,
     message: 'Successfully patched a contact!',
@@ -98,16 +107,9 @@ export const updateContactController = async (req, res) => {
 
 export const deleteContactController = async (req, res) => {
   const { contactId } = req.params;
-
-  if (!mongoose.isValidObjectId(contactId)) {
-    throw createHttpError(400, 'Invalid contact ID format');
-  }
-
   const deletedContact = await deleteContact(contactId);
-
   if (!deletedContact) {
     throw createHttpError(404, 'Contact not found');
   }
-
   res.status(204).send();
 };
