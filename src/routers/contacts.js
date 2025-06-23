@@ -7,39 +7,34 @@ import {
   deleteContactController,
 } from '../controllers/contacts.js';
 import ctrlWrapper from '../utils/ctrlWrapper.js';
-
-// Імпортуємо middleware для валідації тіла запиту
 import validateBody from '../middlewares/validateBody.js';
-
-// Імпортуємо схеми валідації Joi для контактів
 import {
   createContactSchema,
   updateContactSchema,
 } from '../validation/contacts.js';
+import isValidId from '../middlewares/isValidId.js';
 
-// Імпортуємо middleware для перевірки валідності ID (буде створений на наступному кроці)
-import isValidId from '../middlewares/isValidId.js'; // Буде створено далі
+import authenticate from '../middlewares/authenticate.js'; // <--- НОВИЙ ІМПОРТ: Імпортуємо authenticate
 
 const router = express.Router();
 
-router.get('/', ctrlWrapper(getAllContactsController));
-router.get('/:contactId', isValidId, ctrlWrapper(getContactByIdController)); // Застосовуємо isValidId
+// Застосовуємо authenticate middleware до всіх роутів контактів.
+// Він повинен стояти перед isValidId та validateBody.
+router.use(authenticate); // <--- ЗАСТОСУВАННЯ: Це застосує authenticate до ВСІХ маршрутів у цьому роутері.
 
-// Застосовуємо validateBody з createContactSchema перед контролером створення контакту
+router.get('/', ctrlWrapper(getAllContactsController));
+router.get('/:contactId', isValidId, ctrlWrapper(getContactByIdController));
 router.post(
   '/',
   validateBody(createContactSchema),
   ctrlWrapper(createContactController),
 );
-
-// Застосовуємо isValidId та validateBody з updateContactSchema перед контролером оновлення контакту
 router.patch(
   '/:contactId',
   isValidId,
   validateBody(updateContactSchema),
   ctrlWrapper(updateContactController),
 );
-
-router.delete('/:contactId', isValidId, ctrlWrapper(deleteContactController)); // Застосовуємо isValidId
+router.delete('/:contactId', isValidId, ctrlWrapper(deleteContactController));
 
 export default router;
