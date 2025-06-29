@@ -1,10 +1,7 @@
 import createHttpError from 'http-errors';
-// Mongoose import is not needed here as ObjectId validation is handled by middleware
-// import mongoose from 'mongoose';
 
-// Import all necessary service functions.
 import {
-  listContacts, // listContacts now handles filtering
+  listContacts,
   getContactById,
   createContact,
   updateContact,
@@ -12,34 +9,31 @@ import {
 } from '../services/contacts.js';
 
 /**
- * Controller for retrieving all contacts with pagination, sorting, and filtering.
- * @param {import('express').Request} req - Express request object, which may contain query parameters.
- * @param {import('express').Response} res - Express response object.
+ * Контролер для отримання всіх контактів з пагінацією, сортуванням та фільтрацією,
+ * належних поточному автентифікованому користувачеві.
+ * @param {import('express').Request} req - Об'єкт запиту Express.
+ * @param {import('express').Response} res - Об'єкт відповіді Express.
  */
 export const getAllContactsController = async (req, res) => {
+  // Отримуємо userId з об'єкта req.user, який був доданий authenticate middleware
+  const userId = req.user._id;
+
   const page = parseInt(req.query.page || '1', 10);
   const perPage = parseInt(req.query.perPage || '10', 10);
-
   const sortBy = req.query.sortBy || 'name';
   const sortOrder = req.query.sortOrder || 'asc';
-
-  // --- NEW: Retrieve filtering query parameters ---
-  const type = req.query.type; // Get contactType from query
-  // For boolean isFavourite, convert string to boolean. 'true' -> true, anything else -> false.
-  // Check specifically for 'true' or 'false' string to avoid issues.
-  let isFavourite = undefined; // Default to undefined to not apply filter if not provided
+  const type = req.query.type;
+  let isFavourite = undefined;
   if (req.query.isFavourite !== undefined) {
-    // Only convert if the parameter is actually present
     isFavourite = req.query.isFavourite === 'true';
   }
-  // --- END NEW ---
 
   if (!['asc', 'desc'].includes(sortOrder)) {
     throw createHttpError(400, 'Invalid sortOrder. Must be "asc" or "desc".');
   }
 
-  // Call the listContacts service, passing pagination, sorting, AND filtering parameters.
-  const paginatedContacts = await listContacts({
+  // Передаємо userId та інші параметри до сервісної функції
+  const paginatedContacts = await listContacts(userId, {
     page,
     perPage,
     sortBy,
@@ -63,18 +57,23 @@ export const getAllContactsController = async (req, res) => {
   });
 };
 
-// *****************************************************************
-// Решта контролерів (getContactByIdController, createContactController,
-// updateContactController, deleteContactController) залишаються без змін.
-// Я їх тут не повторюю, щоб не захаращувати код, але вони мають бути у вашому файлі.
-// *****************************************************************
-
+/**
+ * Контролер для отримання контакту за ID, належного поточному користувачеві.
+ * @param {import('express').Request} req - Об'єкт запиту Express.
+ * @param {import('express').Response} res - Об'єкт відповіді Express.
+ */
 export const getContactByIdController = async (req, res) => {
   const { contactId } = req.params;
-  const contact = await getContactById(contactId);
+  // Отримуємо userId з об'єкта req.user
+  const userId = req.user._id;
+
+  // Передаємо userId до сервісної функції
+  const contact = await getContactById(contactId, userId);
+
   if (!contact) {
     throw createHttpError(404, 'Contact not found');
   }
+
   res.status(200).json({
     status: 200,
     message: `Successfully found contact with id ${contactId}!`,
@@ -82,8 +81,19 @@ export const getContactByIdController = async (req, res) => {
   });
 };
 
+/**
+ * Контролер для створення нового контакту для поточного користувача.
+ * @param {import('express').Request} req - Об'єкт запиту Express.
+ * @param {import('express').Response} res - Об'єкт відповіді Express.
+ */
 export const createContactController = async (req, res) => {
-  const newContact = await createContact(req.body);
+  // Отримуємо userId з об'єкта req.user
+  const userId = req.user._id;
+  // Додаємо userId до тіла запиту перед передачею до сервісу
+  const payloadWithUserId = { ...req.body, userId };
+
+  const newContact = await createContact(payloadWithUserId);
+
   res.status(201).json({
     status: 201,
     message: 'Successfully created a contact!',
@@ -91,13 +101,24 @@ export const createContactController = async (req, res) => {
   });
 };
 
+/**
+ * Контролер для оновлення існуючого контакту, належного поточному користувачеві.
+ * @param {import('express').Request} req - Об'єкт запиту Express.
+ * @param {import('express').Response} res - Об'єкт відповіді Express.
+ */
 export const updateContactController = async (req, res) => {
   const { contactId } = req.params;
+  // Отримуємо userId з об'єкта req.user
+  const userId = req.user._id;
   const payload = req.body;
-  const updatedContact = await updateContact(contactId, payload);
+
+  // Передаємо userId до сервісної функції
+  const updatedContact = await updateContact(contactId, userId, payload);
+
   if (!updatedContact) {
     throw createHttpError(404, 'Contact not found');
   }
+
   res.status(200).json({
     status: 200,
     message: 'Successfully patched a contact!',
@@ -105,11 +126,22 @@ export const updateContactController = async (req, res) => {
   });
 };
 
+/**
+ * Контролер для видалення контакту, належного поточному користувачеві.
+ * @param {import('express').Request} req - Об'єкт запиту Express.
+ * @param {import('express').Response} res - Об'єкт відповіді Express.
+ */
 export const deleteContactController = async (req, res) => {
   const { contactId } = req.params;
-  const deletedContact = await deleteContact(contactId);
+  // Отримуємо userId з об'єкта req.user
+  const userId = req.user._id;
+
+  // Передаємо userId до сервісної функції
+  const deletedContact = await deleteContact(contactId, userId);
+
   if (!deletedContact) {
     throw createHttpError(404, 'Contact not found');
   }
+
   res.status(204).send();
 };
