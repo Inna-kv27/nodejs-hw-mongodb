@@ -1,6 +1,6 @@
 import createHttpError from 'http-errors';
 import Session from '../models/Session.js'; // Імпортуємо модель Session
-import User from '../models/User.js'; // Імпортуємо модель User
+import asyncHandler from '../utils/asyncHandler.js'; // НОВЕ: Імпортуємо asyncHandler
 
 /**
  * Middleware для автентифікації користувача за access токеном.
@@ -9,7 +9,8 @@ import User from '../models/User.js'; // Імпортуємо модель User
  * @param {import('express').NextFunction} next - Функція для передачі управління наступному middleware.
  * @throws {createHttpError.Unauthorized} Якщо токен відсутній, недійсний або протермінований.
  */
-const authenticate = async (req, res, next) => {
+const authenticate = asyncHandler(async (req, res, next) => {
+  // НОВЕ: Обгортаємо функцію за допомогою asyncHandler
   // 1. Отримуємо заголовок Authorization.
   const authHeader = req.get('Authorization'); // Або req.headers.authorization
 
@@ -54,6 +55,6 @@ const authenticate = async (req, res, next) => {
 
   // 10. Передаємо управління наступному middleware або контролеру.
   next();
-};
+}); // НОВЕ: Закриваємо обгортку asyncHandler
 
 export default authenticate;
