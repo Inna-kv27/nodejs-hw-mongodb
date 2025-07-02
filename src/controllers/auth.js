@@ -1,16 +1,19 @@
+import bcrypt from 'bcrypt';
 import createHttpError from 'http-errors';
+import jwt from 'jsonwebtoken';
+
 import {
   registerUser,
   loginUser,
   refreshUserSession,
   logoutUser,
-} from '../services/auth.js'; // Імпортуємо logoutUser
+  findUserByEmail,
+  updateUserPassword,
+} from '../services/auth.js';
 import Session from '../models/Session.js';
+import { getEnvVar } from '../utils/getEnvVar.js';
+import sendMail from '../utils/sendMail.js';
 
-/**
- * Контролер для реєстрації нового користувача.
- * (Без змін з попередніх кроків)
- */
 export const registerController = async (req, res) => {
   const { name, email, password } = req.body;
   const user = await registerUser({ name, email, password });
@@ -21,10 +24,6 @@ export const registerController = async (req, res) => {
   });
 };
 
-/**
- * Контролер для входу користувача.
- * (Без змін з попередніх кроків)
- */
 export const loginController = async (req, res) => {
   const { email, password } = req.body;
   const session = await loginUser({ email, password });
@@ -43,10 +42,6 @@ export const loginController = async (req, res) => {
   });
 };
 
-/**
- * Контролер для оновлення сесії.
- * (Без змін з попередніх кроків)
- */
 export const refreshController = async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
@@ -72,32 +67,88 @@ export const refreshController = async (req, res) => {
   });
 };
 
-/**
- * Контролер для виходу користувача.
- * Обробляє POST-запити до /auth/logout.
- * @param {import('express').Request} req - Об'єкт запиту Express, очікує refresh token у req.cookies.
- * @param {import('express').Response} res - Об'єкт відповіді Express.
- */
 export const logoutController = async (req, res) => {
-  const refreshToken = req.cookies.refreshToken; // Отримуємо refresh token з cookies
+  const refreshToken = req.cookies.refreshToken;
 
-  // Якщо refresh token відсутній, то сесії для видалення немає або користувач вже не автентифікований.
-  // Все одно очищаємо cookie і повертаємо 204.
   if (refreshToken) {
-    // Знаходимо сесію за refresh токеном
-    const session = await Session.findOne({ refreshToken }); // Потрібно імпортувати Session тут
+    const session = await Session.findOne({ refreshToken });
 
     if (session) {
-      // Якщо сесію знайдено, видаляємо її
       await logoutUser(session._id);
     }
   }
 
-  // Очищаємо (видаляємо) refresh token cookie з браузера користувача.
-  // Встановлюємо термін дії на минулу дату, щоб браузер його видалив.
   res.clearCookie('refreshToken');
-
-  // Відправляємо успішну відповідь зі статусом 204 (No Content).
-  // Це означає, що запит був успішним, але немає вмісту для повернення.
   res.status(204).send();
+};
+
+export const sendResetEmailController = async (req, res) => {
+  const { email } = req.body;
+
+  const user = await findUserByEmail(email);
+  if (!user) {
+    throw createHttpError(404, 'User not found!');
+  }
+
+  const resetToken = jwt.sign({ email }, getEnvVar('JWT_SECRET'), {
+    expiresIn: '5m',
+  });
+
+  const appDomain = getEnvVar('APP_DOMAIN');
+  const resetLink = `${appDomain}/reset-password?token=${resetToken}`;
+
+  const emailHtml = `
+    <h1>Reset Your Password</h1>
+    <p>Click the link below to reset your password:</p>
+    <a href="${resetLink}">Reset Password</a>
+    <p>This link is valid for 5 minutes.</p>
+  `;
+
+  try {
+    await sendMail({
+      to: email,
+      subject: 'Password Reset Request',
+      html: emailHtml,
+    });
+
+    res.status(200).json({
+      status: 200,
+      message: 'Reset password email has been successfully sent.',
+      data: {},
+    });
+  } catch (error) {
+    console.error('Failed to send email:', error);
+    throw createHttpError(
+      500,
+      'Failed to send the email, please try again later.',
+    );
+  }
+};
+
+export const resetPasswordController = async (req, res) => {
+  const { token, password } = req.body;
+
+  let email;
+  try {
+    const decoded = jwt.verify(token, getEnvVar('JWT_SECRET'));
+    email = decoded.email;
+  } catch (error) {
+    throw createHttpError(401, 'Token is expired or invalid.');
+  }
+
+  const user = await findUserByEmail(email);
+  if (!user) {
+    throw createHttpError(404, 'User not found!');
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  await updateUserPassword(user._id, hashedPassword);
+
+  await Session.deleteMany({ userId: user._id });
+
+  res.status(200).json({
+    status: 200,
+    message: 'Password has been successfully reset.',
+    data: {},
+  });
 };

@@ -1,35 +1,50 @@
-import express from 'express';
+import { Router } from 'express';
 import {
   registerController,
   loginController,
   refreshController,
   logoutController,
+  sendResetEmailController,
+  resetPasswordController,
 } from '../controllers/auth.js';
-import validateBody from '../middlewares/validateBody.js'; // Для валідації тіла запиту
-import { registerUserSchema, loginUserSchema } from '../validation/auth.js'; // Схеми валідації Joi
-import ctrlWrapper from '../utils/ctrlWrapper.js'; // Обгортка для контролерів
+import validateBody from '../middlewares/validateBody.js'; // ДЕФОЛТНИЙ імпорт, як і має бути
+import {
+  registerUserSchema,
+  loginUserSchema,
+  sendResetEmailSchema,
+  resetPasswordSchema,
+} from '../validation/auth.js';
+import authenticate from '../middlewares/authenticate.js';
+import ctrlWrapper from '../utils/ctrlWrapper.js';
 
-const router = express.Router();
+const authRouter = Router();
 
-// Маршрут для реєстрації нового користувача: POST /auth/register
-// Застосовуємо middleware validateBody з схемою registerUserSchema
-router.post(
+authRouter.post(
   '/register',
   validateBody(registerUserSchema),
   ctrlWrapper(registerController),
 );
 
-// Маршрут для входу користувача: POST /auth/login (буде реалізовано на Кроці 4)
-router.post(
+authRouter.post(
   '/login',
   validateBody(loginUserSchema),
   ctrlWrapper(loginController),
 );
 
-// Маршрут для оновлення сесії: POST /auth/refresh (буде реалізовано на Кроці 5)
-router.post('/refresh', ctrlWrapper(refreshController)); // Валідація буде від cookies
+authRouter.post('/refresh', ctrlWrapper(refreshController));
 
-// Маршрут для виходу користувача: POST /auth/logout (буде реалізовано на Кроці 6)
-router.post('/logout', ctrlWrapper(logoutController));
+authRouter.post('/logout', authenticate, ctrlWrapper(logoutController));
 
-export default router;
+authRouter.post(
+  '/send-reset-email',
+  validateBody(sendResetEmailSchema),
+  ctrlWrapper(sendResetEmailController),
+);
+
+authRouter.post(
+  '/reset-pwd',
+  validateBody(resetPasswordSchema),
+  ctrlWrapper(resetPasswordController),
+);
+
+export default authRouter;

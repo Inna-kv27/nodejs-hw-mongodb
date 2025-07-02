@@ -1,9 +1,9 @@
-import express from 'express';
+import { Router } from 'express';
 import {
   getAllContactsController,
   getContactByIdController,
   createContactController,
-  updateContactController,
+  updateContactController, // ВИПРАВЛЕНО: Імпортуємо updateContactController
   deleteContactController,
 } from '../controllers/contacts.js';
 import ctrlWrapper from '../utils/ctrlWrapper.js';
@@ -13,28 +13,33 @@ import {
   updateContactSchema,
 } from '../validation/contacts.js';
 import isValidId from '../middlewares/isValidId.js';
+import authenticate from '../middlewares/authenticate.js';
 
-import authenticate from '../middlewares/authenticate.js'; // <--- НОВИЙ ІМПОРТ: Імпортуємо authenticate
+const contactsRouter = Router();
 
-const router = express.Router();
+contactsRouter.use(authenticate);
 
-// Застосовуємо authenticate middleware до всіх роутів контактів.
-// Він повинен стояти перед isValidId та validateBody.
-router.use(authenticate); // <--- ЗАСТОСУВАННЯ: Це застосує authenticate до ВСІХ маршрутів у цьому роутері.
-
-router.get('/', ctrlWrapper(getAllContactsController));
-router.get('/:contactId', isValidId, ctrlWrapper(getContactByIdController));
-router.post(
+contactsRouter.get('/', ctrlWrapper(getAllContactsController));
+contactsRouter.get(
+  '/:contactId',
+  isValidId,
+  ctrlWrapper(getContactByIdController),
+);
+contactsRouter.post(
   '/',
   validateBody(createContactSchema),
   ctrlWrapper(createContactController),
 );
-router.patch(
+contactsRouter.patch(
   '/:contactId',
   isValidId,
   validateBody(updateContactSchema),
   ctrlWrapper(updateContactController),
+); // ВИПРАВЛЕНО: Використовуємо updateContactController
+contactsRouter.delete(
+  '/:contactId',
+  isValidId,
+  ctrlWrapper(deleteContactController),
 );
-router.delete('/:contactId', isValidId, ctrlWrapper(deleteContactController));
 
-export default router;
+export default contactsRouter;
