@@ -1,7 +1,6 @@
-import { Schema, model } from 'mongoose';
+import { model, Schema } from 'mongoose';
 
-// Визначаємо схему контакту.
-const contactSchema = new Schema(
+const contactsSchema = new Schema(
   {
     name: {
       type: String,
@@ -13,7 +12,7 @@ const contactSchema = new Schema(
     },
     email: {
       type: String,
-      required: false, // Email може бути необов'язковим
+      required: false,
     },
     isFavourite: {
       type: Boolean,
@@ -21,25 +20,26 @@ const contactSchema = new Schema(
     },
     contactType: {
       type: String,
-      enum: ['personal', 'work', 'family', 'other'], // Обмежені значення для типу контакту
+      enum: ['personal', 'work', 'home'],
       required: true,
       default: 'personal',
     },
     userId: {
-      // НОВЕ ПОЛЕ: ID користувача, якому належить контакт
-      type: Schema.Types.ObjectId, // Тип ObjectId для посилання на інший документ
-      required: true, // Поле є обов'язковим
-      ref: 'User', // Вказуємо, що це посилання на модель 'User'
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: 'User',
+    },
+    photo: {
+      type: String,
+      required: false,
     },
   },
   {
-    timestamps: true, // Автоматично додає поля createdAt та updatedAt
-    versionKey: false, // Відключає поле __v
+    timestamps: true,
+    versionKey: false,
   },
 );
 
-// Створюємо модель Contact з визначеною схемою.
-const Contact = model('Contact', contactSchema);
+const Contact = model('Contact', contactsSchema);
 
-// Експортуємо модель Contact як дефолтний експорт.
 export default Contact;

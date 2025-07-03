@@ -1,5 +1,4 @@
 import createHttpError from 'http-errors';
-
 import {
   listContacts,
   getContactById,
@@ -8,16 +7,8 @@ import {
   deleteContact,
 } from '../services/contacts.js';
 
-/**
- * Контролер для отримання всіх контактів з пагінацією, сортуванням та фільтрацією,
- * належних поточному автентифікованому користувачеві.
- * @param {import('express').Request} req - Об'єкт запиту Express.
- * @param {import('express').Response} res - Об'єкт відповіді Express.
- */
 export const getAllContactsController = async (req, res) => {
-  // Отримуємо userId з об'єкта req.user, який був доданий authenticate middleware
   const userId = req.user._id;
-
   const page = parseInt(req.query.page || '1', 10);
   const perPage = parseInt(req.query.perPage || '10', 10);
   const sortBy = req.query.sortBy || 'name';
@@ -32,7 +23,6 @@ export const getAllContactsController = async (req, res) => {
     throw createHttpError(400, 'Invalid sortOrder. Must be "asc" or "desc".');
   }
 
-  // Передаємо userId та інші параметри до сервісної функції
   const paginatedContacts = await listContacts(userId, {
     page,
     perPage,
@@ -57,17 +47,10 @@ export const getAllContactsController = async (req, res) => {
   });
 };
 
-/**
- * Контролер для отримання контакту за ID, належного поточному користувачеві.
- * @param {import('express').Request} req - Об'єкт запиту Express.
- * @param {import('express').Response} res - Об'єкт відповіді Express.
- */
 export const getContactByIdController = async (req, res) => {
   const { contactId } = req.params;
-  // Отримуємо userId з об'єкта req.user
   const userId = req.user._id;
 
-  // Передаємо userId до сервісної функції
   const contact = await getContactById(contactId, userId);
 
   if (!contact) {
@@ -81,18 +64,16 @@ export const getContactByIdController = async (req, res) => {
   });
 };
 
-/**
- * Контролер для створення нового контакту для поточного користувача.
- * @param {import('express').Request} req - Об'єкт запиту Express.
- * @param {import('express').Response} res - Об'єкт відповіді Express.
- */
 export const createContactController = async (req, res) => {
-  // Отримуємо userId з об'єкта req.user
+  // --- ПОЧАТОК ДЕБАГ-КОДУ ---
+  console.log('Received req.body for createContact:', req.body);
+  // --- КІНЕЦЬ ДЕБАГ-КОДУ ---
+
   const userId = req.user._id;
-  // Додаємо userId до тіла запиту перед передачею до сервісу
+  const photo = req.file; // Отримуємо інформацію про завантажений файл
   const payloadWithUserId = { ...req.body, userId };
 
-  const newContact = await createContact(payloadWithUserId);
+  const newContact = await createContact(payloadWithUserId, photo); // Передаємо файл до сервісу
 
   res.status(201).json({
     status: 201,
@@ -101,19 +82,13 @@ export const createContactController = async (req, res) => {
   });
 };
 
-/**
- * Контролер для оновлення існуючого контакту, належного поточному користувачеві.
- * @param {import('express').Request} req - Об'єкт запиту Express.
- * @param {import('express').Response} res - Об'єкт відповіді Express.
- */
 export const updateContactController = async (req, res) => {
   const { contactId } = req.params;
-  // Отримуємо userId з об'єкта req.user
   const userId = req.user._id;
+  const photo = req.file; // Отримуємо інформацію про завантажений файл
   const payload = req.body;
 
-  // Передаємо userId до сервісної функції
-  const updatedContact = await updateContact(contactId, userId, payload);
+  const updatedContact = await updateContact(contactId, userId, payload, photo); // Передаємо файл до сервісу
 
   if (!updatedContact) {
     throw createHttpError(404, 'Contact not found');
@@ -126,17 +101,10 @@ export const updateContactController = async (req, res) => {
   });
 };
 
-/**
- * Контролер для видалення контакту, належного поточному користувачеві.
- * @param {import('express').Request} req - Об'єкт запиту Express.
- * @param {import('express').Response} res - Об'єкт відповіді Express.
- */
 export const deleteContactController = async (req, res) => {
   const { contactId } = req.params;
-  // Отримуємо userId з об'єкта req.user
   const userId = req.user._id;
 
-  // Передаємо userId до сервісної функції
   const deletedContact = await deleteContact(contactId, userId);
 
   if (!deletedContact) {

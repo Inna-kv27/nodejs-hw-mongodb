@@ -7,7 +7,7 @@ import {
   sendResetEmailController,
   resetPasswordController,
 } from '../controllers/auth.js';
-import validateBody from '../middlewares/validateBody.js'; // ДЕФОЛТНИЙ імпорт, як і має бути
+import validateBody from '../middlewares/validateBody.js'; // ПЕРЕВІРКА: Дефолтний імпорт
 import {
   registerUserSchema,
   loginUserSchema,

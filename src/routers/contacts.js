@@ -3,7 +3,7 @@ import {
   getAllContactsController,
   getContactByIdController,
   createContactController,
-  updateContactController, // ВИПРАВЛЕНО: Імпортуємо updateContactController
+  updateContactController,
   deleteContactController,
 } from '../controllers/contacts.js';
 import ctrlWrapper from '../utils/ctrlWrapper.js';
@@ -14,6 +14,7 @@ import {
 } from '../validation/contacts.js';
 import isValidId from '../middlewares/isValidId.js';
 import authenticate from '../middlewares/authenticate.js';
+import upload from '../middlewares/upload.js'; // Імпортуємо upload middleware
 
 const contactsRouter = Router();
 
@@ -25,17 +26,24 @@ contactsRouter.get(
   isValidId,
   ctrlWrapper(getContactByIdController),
 );
+
+// Додаємо upload.single('photo') для обробки завантаження одного файлу з полем 'photo'
 contactsRouter.post(
   '/',
+  upload.single('photo'), // Обробка файлу
   validateBody(createContactSchema),
   ctrlWrapper(createContactController),
 );
+
+// Додаємо upload.single('photo') для обробки завантаження одного файлу з полем 'photo'
 contactsRouter.patch(
   '/:contactId',
   isValidId,
+  upload.single('photo'), // Обробка файлу
   validateBody(updateContactSchema),
   ctrlWrapper(updateContactController),
-); // ВИПРАВЛЕНО: Використовуємо updateContactController
+);
+
 contactsRouter.delete(
   '/:contactId',
   isValidId,

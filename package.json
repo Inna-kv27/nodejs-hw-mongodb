@@ -7,7 +7,7 @@
   "scripts": {
     "lint": "eslint src/**/*.js",
     "start": "node ./src/index.js",
-    "dev": "nodemon src/index.js"
+    "dev": "node --experimental-specifier-resolution=node -r dotenv/config src/index.js"
   },
   "keywords": [],
   "author": "Inna Kvitka",

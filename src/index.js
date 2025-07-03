@@ -1,9 +1,9 @@
-import dotenv from 'dotenv';
+import dotenv from 'dotenv'; // Залишаємо імпорт, якщо він використовується десь ще, але виклик config видаляємо
 import { setupServer } from './server.js';
 import { initMongoConnection } from './db/initMongoDB.js';
 import { getEnvVar } from './utils/getEnvVar.js';
 
-dotenv.config();
+// ВИДАЛЕНО: dotenv.config({ path: './.env' }); // Цей виклик тепер відбувається через скрипт dev
 
 (async () => {
   try {
