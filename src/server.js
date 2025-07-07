@@ -9,7 +9,11 @@ import authRouter from './routers/auth.js';
 import notFoundHandler from './middlewares/notFoundHandler.js';
 import errorHandler from './middlewares/errorHandler.js';
 
-// ВИДАЛЕНО: dotenv.config(); - Цей виклик має бути лише в src/index.js
+// Імпорти для Swagger UI
+import swaggerUi from 'swagger-ui-express';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const swaggerDocument = require('../docs/swagger.json');
 
 export const setupServer = () => {
   const app = express();
@@ -27,6 +31,9 @@ export const setupServer = () => {
 
   app.use('/auth', authRouter);
   app.use('/contacts', contactsRouter);
+
+  // НОВИЙ РОУТ ДЛЯ SWAGGER UI
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
   app.use(notFoundHandler);
   app.use(errorHandler);

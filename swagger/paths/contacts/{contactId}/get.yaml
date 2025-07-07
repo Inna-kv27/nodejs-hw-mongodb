@@ -1,0 +1,36 @@
+get:
+  tags:
+    - Contacts
+  summary: Get a single contact by ID
+  operationId: getContactById
+  description: Retrieve a specific contact by its unique identifier. Requires authentication.
+  security:
+    - bearerAuth: []
+  parameters:
+    - in: path
+      name: contactId
+      required: true
+      schema:
+        type: string
+        pattern: '^[0-9a-fA-F]{24}$'
+      description: ID of the contact to retrieve
+      example: 60d5ec49f3e4e9001c8c4a4a
+  responses:
+    '200':
+      description: Successful response
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/schemas/contact.yaml'
+    '404':
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/responses/notFound.yaml'
+    '401':
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '../../../components/responses/unauthorized.yaml'

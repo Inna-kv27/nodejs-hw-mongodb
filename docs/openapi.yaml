@@ -1,0 +1,42 @@
+openapi: 3.1.0
+info:
+  version: 1.0.0
+  title: Contacts API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  description: API for managing contacts with user authentication, password recovery, and image uploads.
+tags:
+  - name: Auth
+    description: User authentication endpoints
+  - name: Contacts
+    description: Endpoints for managing user contacts
+servers:
+  - url: http://localhost:3000
+  - url: https://your-deployed-app-name.onrender.com
+paths:
+  /users/register:
+    $ref: '../swagger/paths/auth/register/post.yaml'
+  /contacts:
+    $ref: '../swagger/paths/contacts/get.yaml'
+    post:
+      $ref: '../swagger/paths/contacts/post.yaml'
+  /contacts/{contactId}:
+    $ref: '../swagger/paths/contacts/{contactId}/get.yaml'
+    patch:
+      $ref: '../swagger/paths/contacts/{contactId}/patch.yaml'
+    delete:
+      $ref: '../swagger/paths/contacts/{contactId}/delete.yaml'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    Contact:
+      $ref: '../swagger/components/schemas/contact.yaml'
+  responses:
+    NotFound:
+      $ref: '../swagger/components/responses/notFound.yaml'
+    Unauthorized:
+      $ref: '../swagger/components/responses/unauthorized.yaml'

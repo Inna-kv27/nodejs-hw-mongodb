@@ -1,0 +1,61 @@
+post:
+  tags:
+    - Contacts
+  summary: Create a new contact
+  operationId: createContact
+  description: Create a new contact for the authenticated user.
+  security:
+    - bearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          required:
+            - name
+            - email
+            - phone
+          properties:
+            name:
+              type: string
+              example: New Contact
+            email:
+              type: string
+              format: email
+              example: new.contact@example.com
+            phone:
+              type: string
+              example: '111-222-3333'
+            favorite:
+              type: boolean
+              example: false
+  responses:
+    '201':
+      description: Contact successfully created
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas/contact.yaml'
+    '400':
+      description: Bad request (e.g., validation error, missing required fields)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Missing required fields
+    '401':
+      $ref: '../../components/responses/unauthorized.yaml'
+    '409':
+      description: Conflict (e.g., contact with given email already exists)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: Email in use
