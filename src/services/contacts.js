@@ -1,4 +1,4 @@
-import Contact from '../models/Contact.js';
+import Contact from '../models/contact.js';
 import cloudinary from '../utils/cloudinary/cloudinary.js'; // Імпортуємо налаштований Cloudinary
 
 export const listContacts = async (
