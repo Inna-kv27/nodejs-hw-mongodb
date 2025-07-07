@@ -32,7 +32,7 @@ export const listContacts = async (
   const totalItems = await Contact.countDocuments(filter);
   const totalPages = Math.ceil(totalItems / perPage);
   const hasPreviousPage = page > 1;
-  hasNextPage = page < totalPages;
+  const hasNextPage = page < totalPages;
 
   return {
     data: contacts,
