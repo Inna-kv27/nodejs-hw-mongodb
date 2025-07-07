@@ -1,5 +1,5 @@
-import Contact from '../models/contact.js';
-import cloudinary from '../utils/cloudinary/cloudinary.js'; // Імпортуємо налаштований Cloudinary
+import Contact from '../models/Contact.js';
+import cloudinary from '../utils/cloudinary/cloudinary.js';
 
 export const listContacts = async (
   userId,
@@ -32,7 +32,7 @@ export const listContacts = async (
   const totalItems = await Contact.countDocuments(filter);
   const totalPages = Math.ceil(totalItems / perPage);
   const hasPreviousPage = page > 1;
-  const hasNextPage = page < totalPages;
+  hasNextPage = page < totalPages;
 
   return {
     data: contacts,
@@ -51,33 +51,29 @@ export const getContactById = async (contactId, userId) => {
 };
 
 export const createContact = async (payload, photo) => {
-  // Приймаємо об'єкт фото
   let photoUrl = null;
   if (photo) {
-    // ОНОВЛЕНО: Використовуємо photo.buffer замість photo.path
     const result = await cloudinary.uploader.upload(
       `data:${photo.mimetype};base64,${photo.buffer.toString('base64')}`,
     );
-    photoUrl = result.secure_url; // Отримуємо URL завантаженого фото
+    photoUrl = result.secure_url;
   }
-  const contact = await Contact.create({ ...payload, photo: photoUrl }); // Зберігаємо URL фото
+  const contact = await Contact.create({ ...payload, photo: photoUrl });
   return contact;
 };
 
 export const updateContact = async (contactId, userId, payload, photo) => {
-  // Приймаємо об'єкт фото
   let photoUrl = null;
   if (photo) {
-    // ОНОВЛЕНО: Використовуємо photo.buffer замість photo.path
     const result = await cloudinary.uploader.upload(
       `data:${photo.mimetype};base64,${photo.buffer.toString('base64')}`,
     );
-    photoUrl = result.secure_url; // Отримуємо URL завантаженого фото
+    photoUrl = result.secure_url;
   }
 
   const updatedPayload = { ...payload };
   if (photoUrl) {
-    updatedPayload.photo = photoUrl; // Додаємо URL фото до оновлених даних
+    updatedPayload.photo = photoUrl;
   }
 
   const contact = await Contact.findOneAndUpdate(
