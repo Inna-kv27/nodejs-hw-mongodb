@@ -27,21 +27,21 @@ contactsRouter.get(
   ctrlWrapper(getContactByIdController),
 );
 
-// Додаємо upload.single('photo') для обробки завантаження одного файлу з полем 'photo'
+// Для POST: validateBody ПІСЛЯ контролера (порядок, який працює)
 contactsRouter.post(
   '/',
   upload.single('photo'), // Обробка файлу
-  validateBody(createContactSchema),
-  ctrlWrapper(createContactController),
+  ctrlWrapper(createContactController), // Контролер, який перетворює isFavourite
+  validateBody(createContactSchema), // Валідація після перетворення
 );
 
-// Додаємо upload.single('photo') для обробки завантаження одного файлу з полем 'photo'
+// Для PATCH: validateBody ПІСЛЯ контролера (порядок, який працює)
 contactsRouter.patch(
   '/:contactId',
   isValidId,
   upload.single('photo'), // Обробка файлу
-  validateBody(updateContactSchema),
-  ctrlWrapper(updateContactController),
+  ctrlWrapper(updateContactController), // Контролер, який перетворює isFavourite
+  validateBody(updateContactSchema), // Валідація після перетворення
 );
 
 contactsRouter.delete(

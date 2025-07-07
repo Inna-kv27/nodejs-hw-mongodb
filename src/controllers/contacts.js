@@ -65,15 +65,16 @@ export const getContactByIdController = async (req, res) => {
 };
 
 export const createContactController = async (req, res) => {
-  // --- ПОЧАТОК ДЕБАГ-КОДУ ---
-  console.log('Received req.body for createContact:', req.body);
-  // --- КІНЕЦЬ ДЕБАГ-КОДУ ---
-
   const userId = req.user._id;
-  const photo = req.file; // Отримуємо інформацію про завантажений файл
-  const payloadWithUserId = { ...req.body, userId };
+  const photo = req.file;
 
-  const newContact = await createContact(payloadWithUserId, photo); // Передаємо файл до сервісу
+  // Примусове перетворення isFavourite на булеве значення для POST
+  const payload = { ...req.body, userId };
+  if (typeof payload.isFavourite === 'string') {
+    payload.isFavourite = payload.isFavourite === 'true';
+  }
+
+  const newContact = await createContact(payload, photo);
 
   res.status(201).json({
     status: 201,
@@ -85,10 +86,18 @@ export const createContactController = async (req, res) => {
 export const updateContactController = async (req, res) => {
   const { contactId } = req.params;
   const userId = req.user._id;
-  const photo = req.file; // Отримуємо інформацію про завантажений файл
+  const photo = req.file;
   const payload = req.body;
 
-  const updatedContact = await updateContact(contactId, userId, payload, photo); // Передаємо файл до сервісу
+  // Примусове перетворення isFavourite на булеве значення для PATCH
+  if (
+    payload.isFavourite !== undefined &&
+    typeof payload.isFavourite === 'string'
+  ) {
+    payload.isFavourite = payload.isFavourite === 'true';
+  }
+
+  const updatedContact = await updateContact(contactId, userId, payload, photo);
 
   if (!updatedContact) {
     throw createHttpError(404, 'Contact not found');

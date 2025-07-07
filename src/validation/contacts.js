@@ -1,7 +1,5 @@
-import Joi from 'joi'; // Імпортуємо Joi для побудови схем валідації
+import Joi from 'joi';
 
-// Схема валідації для створення нового контакту (POST /contacts).
-// Усі обов'язкові поля повинні бути присутні.
 export const createContactSchema = Joi.object({
   name: Joi.string().min(3).max(20).required().messages({
     'string.min': 'Name should have a minimum length of {#limit}',
@@ -16,9 +14,7 @@ export const createContactSchema = Joi.object({
   email: Joi.string().email().messages({
     'string.email': 'Email must be a valid email address',
   }),
-  // ОНОВЛЕНО: Додано truthy/falsy для обробки рядкових "true"/"false"
-  isFavourite: Joi.boolean().truthy('true').falsy('false').sensitive(false),
-  // ОНОВЛЕНО: Додано .trim() для видалення зайвих пробілів
+  isFavourite: Joi.boolean(), // Спрощено до просто Joi.boolean()
   contactType: Joi.string()
     .valid('personal', 'work', 'family', 'other')
     .required()
@@ -29,8 +25,6 @@ export const createContactSchema = Joi.object({
     }),
 });
 
-// Схема валідації для оновлення існуючого контакту (PATCH /contacts/:contactId).
-// Усі поля є необов'язковими, але якщо вони присутні, вони повинні відповідати правилам.
 export const updateContactSchema = Joi.object({
   name: Joi.string().min(3).max(20).messages({
     'string.min': 'Name should have a minimum length of {#limit}',
@@ -43,13 +37,11 @@ export const updateContactSchema = Joi.object({
   email: Joi.string().email().messages({
     'string.email': 'Email must be a valid email address',
   }),
-  // ОНОВЛЕНО: Додано truthy/falsy для обробки рядкових "true"/"false"
-  isFavourite: Joi.boolean().truthy('true').falsy('false').sensitive(false),
-  // ОНОВЛЕНО: Додано .trim() для видалення зайвих пробілів
+  isFavourite: Joi.boolean(), // Спрощено до просто Joi.boolean()
   contactType: Joi.string()
     .valid('personal', 'work', 'family', 'other')
     .trim()
     .messages({
       'any.only': 'Contact type must be one of [personal, work, family, other]',
     }),
-}).min(1); // Для PATCH хоча б одне поле має бути присутнім
+}).min(1);

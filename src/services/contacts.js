@@ -54,7 +54,10 @@ export const createContact = async (payload, photo) => {
   // Приймаємо об'єкт фото
   let photoUrl = null;
   if (photo) {
-    const result = await cloudinary.uploader.upload(photo.path); // Завантажуємо файл на Cloudinary
+    // ОНОВЛЕНО: Використовуємо photo.buffer замість photo.path
+    const result = await cloudinary.uploader.upload(
+      `data:${photo.mimetype};base64,${photo.buffer.toString('base64')}`,
+    );
     photoUrl = result.secure_url; // Отримуємо URL завантаженого фото
   }
   const contact = await Contact.create({ ...payload, photo: photoUrl }); // Зберігаємо URL фото
@@ -65,7 +68,10 @@ export const updateContact = async (contactId, userId, payload, photo) => {
   // Приймаємо об'єкт фото
   let photoUrl = null;
   if (photo) {
-    const result = await cloudinary.uploader.upload(photo.path); // Завантажуємо файл на Cloudinary
+    // ОНОВЛЕНО: Використовуємо photo.buffer замість photo.path
+    const result = await cloudinary.uploader.upload(
+      `data:${photo.mimetype};base64,${photo.buffer.toString('base64')}`,
+    );
     photoUrl = result.secure_url; // Отримуємо URL завантаженого фото
   }
 
