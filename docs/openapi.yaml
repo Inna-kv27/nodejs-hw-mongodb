@@ -13,16 +13,18 @@ tags:
     description: Endpoints for managing user contacts
 servers:
   - url: http://localhost:3000
-  - url: https://your-deployed-app-name.onrender.com
+  - url: https://nodejs-hw-mongodb-w4df.onrender.com
 paths:
   /users/register:
     $ref: '../swagger/paths/auth/register/post.yaml'
   /contacts:
-    $ref: '../swagger/paths/contacts/get.yaml'
+    get:
+      $ref: '../swagger/paths/contacts/get.yaml'
     post:
       $ref: '../swagger/paths/contacts/post.yaml'
   /contacts/{contactId}:
-    $ref: '../swagger/paths/contacts/{contactId}/get.yaml'
+    get:
+      $ref: '../swagger/paths/contacts/{contactId}/get.yaml'
     patch:
       $ref: '../swagger/paths/contacts/{contactId}/patch.yaml'
     delete:
@@ -35,6 +37,10 @@ components:
   schemas:
     Contact:
       $ref: '../swagger/components/schemas/contact.yaml'
+    RegisteredUserResponse:
+      $ref: '../swagger/components/schemas/registeredUserResponse.yaml'
+    PaginatedContacts:
+      $ref: '../swagger/components/schemas/paginatedContacts.yaml'
   responses:
     NotFound:
       $ref: '../swagger/components/responses/notFound.yaml'

@@ -3,7 +3,7 @@ post:
     - Contacts
   summary: Create a new contact
   operationId: createContact
-  description: Create a new contact for the authenticated user.
+  description: Add a new contact to the user's list. Requires authentication.
   security:
     - bearerAuth: []
   requestBody:
@@ -19,43 +19,45 @@ post:
           properties:
             name:
               type: string
-              example: New Contact
+              example: Jane Doe
             email:
               type: string
               format: email
-              example: new.contact@example.com
+              example: jane.doe@example.com
             phone:
               type: string
-              example: '111-222-3333'
+              example: '098-765-4321'
             favorite:
               type: boolean
-              example: false
+              example: true
   responses:
     '201':
       description: Contact successfully created
       content:
         application/json:
           schema:
-            $ref: '../../components/schemas/contact.yaml'
+            type: object
+            properties:
+              status:
+                type: string
+                example: success
+              data:
+                type: object
+                properties:
+                  contact:
+                    $ref: '../../components/schemas/contact.yaml' # Правильний шлях
     '400':
-      description: Bad request (e.g., validation error, missing required fields)
+      description: Bad Request (Validation error)
       content:
         application/json:
           schema:
             type: object
             properties:
+              status:
+                type: string
+                example: error
               message:
                 type: string
-                example: Missing required fields
+                example: 'Validation error'
     '401':
       $ref: '../../components/responses/unauthorized.yaml'
-    '409':
-      description: Conflict (e.g., contact with given email already exists)
-      content:
-        application/json:
-          schema:
-            type: object
-            properties:
-              message:
-                type: string
-                example: Email in use

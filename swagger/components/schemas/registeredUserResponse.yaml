@@ -1,0 +1,42 @@
+type: object
+properties:
+  status:
+    type: integer
+    example: 201
+    description: HTTP status code
+  message:
+    type: string
+    example: 'Successfully registered a user!'
+    description: A message indicating the success of the registration.
+  data:
+    type: object
+    properties:
+      name:
+        type: string
+        example: 'Test User'
+      email:
+        type: string
+        format: email
+        example: 'test@example.com'
+      _id:
+        type: string
+        pattern: '^[0-9a-fA-F]{24}$'
+        description: Unique identifier of the user
+        example: '686ed7bbaf6ab84c5a3978b0'
+      createdAt:
+        type: string
+        format: date-time
+        description: Date and time when the user was created
+      updatedAt:
+        type: string
+        format: date-time
+        description: Date and time when the user was last updated
+      __v:
+        type: integer
+        example: 0
+    required:
+      - name
+      - email
+      - _id
+      - createdAt
+      - updatedAt

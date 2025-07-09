@@ -1,3 +1,4 @@
+# swagger/paths/auth/register/post.yaml
 post:
   tags:
     - Auth
@@ -11,35 +12,29 @@ post:
         schema:
           type: object
           required:
+            - name # Додайте це, якщо ваш сервер вимагає name при реєстрації
             - email
             - password
           properties:
+            name: # Додайте це, якщо ваш сервер вимагає name при реєстрації
+              type: string
+              example: John Doe
+              description: User's full name
             email:
               type: string
               format: email
               example: user@example.com
             password:
               type: string
-              format: password
               minLength: 6
-              example: password123
+              example: 'password123'
   responses:
     '201':
       description: User successfully registered
       content:
         application/json:
           schema:
-            type: object
-            properties:
-              user:
-                type: object
-                properties:
-                  email:
-                    type: string
-                    example: user@example.com
-                  subscription:
-                    type: string
-                    example: starter
+            $ref: '../../../components/schemas/registeredUserResponse.yaml'
     '400':
       description: Bad request (e.g., validation error)
       content:
@@ -47,9 +42,17 @@ post:
           schema:
             type: object
             properties:
+              status:
+                type: integer
+                example: 400
               message:
                 type: string
-                example: missing required field email
+                example: 'Validation error'
+              data:
+                type: array
+                items:
+                  type: string
+                  example: 'Name is required'
     '409':
       description: Conflict (e.g., email already in use)
       content:
@@ -57,6 +60,9 @@ post:
           schema:
             type: object
             properties:
+              status:
+                type: integer
+                example: 409
               message:
                 type: string
-                example: Email in use
+                example: 'Email already in use'
