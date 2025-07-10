@@ -11,6 +11,7 @@ import errorHandler from './middlewares/errorHandler.js';
 
 // Імпорти для Swagger UI
 import swaggerUi from 'swagger-ui-express';
+// ПОВЕРНУТО до createRequire/require() для обходу ERR_IMPORT_ATTRIBUTE_MISSING
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const swaggerDocument = require('../docs/swagger.json');

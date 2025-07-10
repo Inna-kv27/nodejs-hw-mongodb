@@ -1,7 +1,9 @@
+# docs/openapi.yaml
+
 openapi: 3.1.0
 info:
-  version: 1.0.0
   title: Contacts API
+  version: 1.0.0
   license:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
@@ -16,19 +18,207 @@ servers:
   - url: https://nodejs-hw-mongodb-w4df.onrender.com
 paths:
   /users/register:
-    $ref: '../swagger/paths/auth/register/post.yaml'
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      operationId: registerUser
+      description: Registers a new user with a unique email and password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: 'Test User'
+                email:
+                  type: string
+                  format: email
+                  example: 'test@example.com'
+                password:
+                  type: string
+                  format: password
+                  example: 'password123'
+              required:
+                - name
+                - email
+                - password
+      responses:
+        '201':
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisteredUserResponse'
+        '400':
+          description: Bad request (e.g., validation error)
   /contacts:
     get:
-      $ref: '../swagger/paths/contacts/get.yaml'
+      tags:
+        - Contacts
+      summary: Get all contacts
+      operationId: getAllContacts
+      description: Retrieve a list of all contacts for the authenticated user. Supports pagination.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number for pagination
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: Number of contacts per page
+        - in: query
+          name: favorite
+          schema:
+            type: boolean
+          description: Filter contacts by favorite status
+      responses:
+        '200':
+          description: Successful response with a list of contacts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contacts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contact'
+                  total:
+                    type: integer
+                    description: Total number of contacts
+                  page:
+                    type: integer
+                    description: Current page number
+                  limit:
+                    type: integer
+                    description: Number of contacts per page
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
-      $ref: '../swagger/paths/contacts/post.yaml'
+      tags:
+        - Contacts
+      summary: Create a new contact
+      operationId: createContact
+      description: Create a new contact for the authenticated user.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contact'
+      responses:
+        '201':
+          description: Contact successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '400':
+          description: Bad request (e.g., validation error)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /contacts/{contactId}:
     get:
-      $ref: '../swagger/paths/contacts/{contactId}/get.yaml'
+      tags:
+        - Contacts
+      summary: Get a contact by ID
+      operationId: getContactById
+      description: Retrieve a single contact for the authenticated user by its ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: contactId
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+          description: ID of the contact to retrieve
+      responses:
+        '200':
+          description: Successful response with the contact details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     patch:
-      $ref: '../swagger/paths/contacts/{contactId}/patch.yaml'
+      tags:
+        - Contacts
+      summary: Update a contact by ID
+      operationId: updateContactById
+      description: Update an existing contact for the authenticated user by its ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: contactId
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+          description: ID of the contact to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Contact'
+      responses:
+        '200':
+          description: Contact successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '400':
+          description: Bad request (e.g., validation error)
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
     delete:
-      $ref: '../swagger/paths/contacts/{contactId}/delete.yaml'
+      tags:
+        - Contacts
+      summary: Delete a contact by ID
+      operationId: deleteContactById
+      description: Delete a contact for the authenticated user by its ID.
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: contactId
+          required: true
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+          description: ID of the contact to delete
+      responses:
+        '204':
+          description: Contact successfully deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   securitySchemes:
     bearerAuth:

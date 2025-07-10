@@ -1,3 +1,5 @@
+# D:\Projects\nodejs-hw-mongodb\swagger\components\schemas\registeredUserResponse.yaml
+
 type: object
 properties:
   status:
