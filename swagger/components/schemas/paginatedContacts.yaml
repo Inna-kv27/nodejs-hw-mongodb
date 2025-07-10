@@ -1,0 +1,29 @@
+# swagger/components/schemas/paginatedContacts.yaml
+type: object
+properties:
+  status:
+    type: string
+    example: success
+  data:
+    type: object
+    properties:
+      page:
+        type: integer
+        example: 1
+        description: Current page number
+      limit:
+        type: integer
+        example: 10
+        description: Number of items per page
+      totalPages:
+        type: integer
+        example: 5
+        description: Total number of pages
+      totalCount:
+        type: integer
+        example: 42
+        description: Total number of items
+      contacts: # Змініть 'data' на 'contacts' або ту назву, яку використовує ваш сервер
+        type: array
+        items:
+          $ref: './contact.yaml' # Посилання на схему Contact у тій самій папці
