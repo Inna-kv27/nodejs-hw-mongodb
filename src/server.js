@@ -30,6 +30,11 @@ export const setupServer = () => {
   );
   app.use(cookieParser());
 
+  // ДОДАНО: Перенаправлення з кореневого шляху на документацію Swagger UI
+  app.get('/', (req, res) => {
+    res.redirect('/api-docs');
+  });
+
   app.use('/auth', authRouter);
   app.use('/contacts', contactsRouter);
 
